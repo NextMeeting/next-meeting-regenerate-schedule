@@ -6,47 +6,51 @@
 
 */
 
+require("isomorphic-fetch");
+const zlib = require('zlib');
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const AWS = require('aws-sdk');
 
 const { DateTime } = require("luxon");
-const { RRule, RRuleSet, rrulestr } = require('rrule');
-
 
 const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotification, sendErrorNotification, getCloudWatchLogDeeplink, sleep } = require("./global.js");
 
-
-// Local only
-
-const fs = require('fs');
-const path = require('path');
-const { lookup } = require('dns');
+const DEVELOPMENT_ENV_FILE_PATH = "../.env"
 
 const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
-const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
 
-const readJSONFile = pipe(
-  resolveFilePath,
-  fs.readFileSync,
-  buffer => buffer.toString()
-)
 
-function loadEnvVars() {
-  const envVars = readJSONFile("../.env").
-    split("\n").
-    map(line => line.split("="));
 
-  envVars.forEach(([key, value])=>{
-    process.env[key] = value;
-  });
+const RUNNING_IN_DEVELOPMENT_MODE = !process.env.AWS_LAMBDA_LOG_GROUP_NAME;
+
+
+// If we're running outside of AWS Lambda, load 
+// env vars from a .env file in project root
+if(RUNNING_IN_DEVELOPMENT_MODE) {
+  const fs = require('fs');
+  const path = require('path');
+
+  const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
+
+  const readJSONFile = pipe(
+    resolveFilePath,
+    fs.readFileSync,
+    buffer => buffer.toString()
+  )
+
+  function loadEnvVars() {
+    const envVars = readJSONFile(DEVELOPMENT_ENV_FILE_PATH).
+      split("\n").
+      map(line => line.split("="));
+
+    envVars.forEach(([key, value])=>{
+      process.env[key] = value;
+    });
+  }
+
+  loadEnvVars();
 }
-
-loadEnvVars();
-
-// end local only
-
-
 
 
 validateEnvVars([
@@ -54,7 +58,11 @@ validateEnvVars([
   "GOOGLE_API_PRIVATE_KEY",
   "GOOGLE_SHEETS_MEETING_LIST_SPREADSHEET_ID",
   "AWS_ACCESS_KEY_ID",
-  "AWS_SECRET_ACCESS_KEY"
+  "AWS_SECRET_ACCESS_KEY",
+  "CLOUDFRONT_DISTRIBUTION_ID",
+  "AWS_S3_BUCKET",
+  "AWS_S3_REGION",
+  "SLACK_WEBHOOK_URL"
 ])
 
 
@@ -66,11 +74,18 @@ const {
   AWS_SECRET_ACCESS_KEY
 } = process.env;
 
-const OUTPUT_FILE_NAME = "meetings.json";
+const AWS_CREDS = RUNNING_IN_DEVELOPMENT_MODE ? 
+{
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY
+} : 
+undefined; // In production, the AWS SDK will automatically capture credentials from the Lambda environment
 
 // Runtime
 
 const doc = new GoogleSpreadsheet(GOOGLE_SHEETS_MEETING_LIST_SPREADSHEET_ID);
+
+var s3 = new AWS.S3(AWS_CREDS);
 
 const loginPromise = doc.useServiceAccountAuth({
   client_email: GOOGLE_API_CLIENT_EMAIL,
@@ -83,27 +98,12 @@ async function getDoc() {
   return doc;
 }
 
-
-async function uploadFile({bucket, fileName, fileContents}) {
-  return storage.
-    bucket(bucket).
-    file(fileName).
-    save(fileContents)
-}
-
-var s3 = new AWS.S3({
-  accessKeyId: AWS_ACCESS_KEY_ID,
-  secretAccessKey: AWS_SECRET_ACCESS_KEY
-});
-
-
-function uploadFile({bucket, fileName, fileContents}) {
+function uploadJsonFile({bucket, folderName = "", fileName, fileContents}) {
   return new Promise(function(resolve, reject) {
-      fileStream.once('error', reject);
       s3.upload({
-          Bucket: bucketName,
-          Key: fileName,
-          Body: fileContents
+          Bucket: bucket,
+          Key: `${folderName}/${fileName}`,
+          Body: zlib.gzipSync(JSON.stringify(fileContents))
       }).
       promise().
       then(resolve, reject);
@@ -114,9 +114,55 @@ const COLUNM_COUNT = 11;
 
 const map = (i, fn) => Array.from({length: i}).map((_, index) => fn(index));
 
-
 const getRowContent = sheet => rowNumber => map(COLUNM_COUNT, i => sheet.getCell(rowNumber, i)._rawData.formattedValue);
-const getHeaderColumnNames = sheet => getRowContent(sheet, 2);
+
+const VALID_ZOOM_PASSWORD_REGEX=/[a-z0-9]/ig
+const MATCH_AA_SURROUNDED_BY_WHITESPACE = /\s+aa\s+/ig;
+const MATCH_OPEN_MEETING_SURROUNDED_BY_WHITESPACE = /\s+open\s+/ig;
+
+const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol}) => {
+  return {
+    name: meetingName,
+    nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
+    connectionDetails: {
+      platform: 'zoom',
+      mustContactForConnectionInfo: VALID_ZOOM_PASSWORD_REGEX.test(zoomMeetingPassword),
+      meetingId: zoomMeetingId,
+      password: zoomMeetingPassword,
+      joinUrl: zoomJoinUrl
+    },
+    contactInfo: contactInfo,
+    notes: "",
+    participantCount: "",
+    metadata: {
+      hostLocation: "",
+      localTimezoneOffset: undefined, 
+      language: "en",
+      fellowship: MATCH_AA_SURROUNDED_BY_WHITESPACE.test(meetingName) ? "aa" : "sa",
+      restrictions: {
+        openMeeting: MATCH_OPEN_MEETING_SURROUNDED_BY_WHITESPACE.test(meetingName),
+        gender: "ALL"
+      }
+    }
+  }
+}
+
+function getNextOccurance({dayOfWeekEST, startTimeEST}) {
+  const {hour, minute} = parseHourAndMinute(startTimeEST);
+  const luxonDate = DateTime.fromObject({
+    zone: "America/New_York",
+    weekday: dayOfWeekStringToLuxonWeekdayNumber(dayOfWeekEST),
+    hour,
+    minute
+  }).toUTC();
+  const luxonDateAsISO = luxonDate.toISO();
+  if(luxonDateAsISO === null) console.error(`❗️ null date! Info: ${dayOfWeekEST} ${startTimeEST}`);
+  if(luxonDateAsISO < new Date().toISOString()) { // Only generate meetings in the future
+    return luxonDate.plus({weeks: 1}).toISO();
+  }
+  return luxonDateAsISO;
+}
+
 
 const COLUMN_JSON_KEYS = ["dayOfWeekEST", "startTimeEST", "startTimePST", "startTimeUK", "startTimeIndia", "meetingName", "zoomMeetingId", "zoomMeetingPassword", "zoomJoinUrl", "contactInfo", "unknownCol"]; 
 const rowToJson = cells => Object.fromEntries(cells.map((content, i) => [COLUMN_JSON_KEYS[i], content]))
@@ -131,24 +177,12 @@ const LUXON_DAYS_OF_WEEK = {
   sunday: 7,
 }
 
-
 const dayOfWeekStringToLuxonWeekdayNumber = str => {
   if(!str) throw TypeError(`str must be defined. Got: \`${str}\``);
   const result = LUXON_DAYS_OF_WEEK[str.toLowerCase()];
   if(!result) throw TypeError(`Unable to find day of week constant for string \`${str}\``);
   return result;
 }
-
-const WHITESPACE_REGEX = /\s/ig;
-const MATCH_PM_REGEX = /pm/ig;
-const PM_HOURS_TO_ADD = 12;
-
-
-/*
-  BUGGY!
-  The Am/Pm code isn't quite right yet, and gets easily confused
-*/
-
 
 // From https://gist.github.com/apolopena/ad4af8bb58e2b1f18b1e0bb78143ebdc
 function convert12HourTimeTo24HourTime(s) {
@@ -177,46 +211,6 @@ const parseHourAndMinute = str => {
   return {
     hour: parseInt(stringHour),
     minute: parseInt(stringMinute)
-  }
-}
-
-function getNextOccurance({dayOfWeekEST, startTimeEST}) {
-  const {hour, minute} = parseHourAndMinute(startTimeEST);
-  const luxonDate = DateTime.fromObject({
-    zone: "America/New_York",
-    weekday: dayOfWeekStringToLuxonWeekdayNumber(dayOfWeekEST),
-    hour,
-    minute
-  }).toUTC();
-  const luxonDateAsISO = luxonDate.toISO();
-  if(luxonDateAsISO === null) console.error(`❗️ null date! Info: ${dayOfWeekEST} ${startTimeEST}`);
-  if(luxonDateAsISO < new Date().toISOString()) { // Only generate meetings in the future
-    return luxonDate.plus({weeks: 1}).toISO();
-  }
-  return luxonDateAsISO;
-}
-
-const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol}) => {
-  return {
-    name: meetingName,
-    nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
-    connectionDetails: {
-      platform: 'zoom',
-      meetingId: zoomMeetingId,
-      password: zoomMeetingPassword,
-      quickJoinUrl: zoomJoinUrl
-    },
-    contactInfo: contactInfo,
-    participants: "",
-    metadata: {
-      hostLocation: "",
-      language: "en",
-      fellowship: "",
-      restrictions: {
-        openToPublic: false,
-        gender: "ALL"
-      }
-    }
   }
 }
 
@@ -250,23 +244,19 @@ exports.handler = async (event, context) => {
     await sheet.loadCells();
     console.log("Loaded");
 
-    console.log(`${sheet.rowCount} rows`);
 
     const meetingCount = sheet.rowCount - ROWS_OCCUPIED_BY_HEADER;
     const meetingList = map(meetingCount, retrieveFormattedMeetingFromSheet(sheet)).
       filter(item => item !== undefined).
       sort(sortMeetingFn);
 
-    meetingList.forEach(meeting => {
-      console.log(`${meeting.nextOccurrence ? new Date(meeting.nextOccurrence).toString() : null}: ${meeting.name}`)
-    });
+    console.log(`Generated schedule (${meetingList.length} total meetings)`);
     
 
-    const currentTime = new Date().toISOString();
     const twentyFourHoursFromNow = DateTime.local().plus({hours: 24}).toUTC().toISO();
     const sixHoursFromNow = DateTime.local().plus({hours: 6}).toUTC().toISO();
 
-    const fullWeekSchedule = {
+    const next7Days = {
       metadata: {
         scheduleType: "fullWeek",
         generatedAt: new Date().toISOString(),
@@ -282,30 +272,77 @@ exports.handler = async (event, context) => {
       meetings: meetingList.filter((({nextOccurrence}) => nextOccurrence < twentyFourHoursFromNow))
     }
 
-    const nextSixHours = {
-      metadata: {
-        scheduleType: "nextSixHours",
-        generatedAt: new Date().toISOString(),
-      },
-      meetings: meetingList.filter((({nextOccurrence}) => nextOccurrence < sixHoursFromNow))
+ 
+    if(process.env.RUN_LOCAL) {
+      console.log(`[dev] Writing files to local disk`);
+      fs.writeFileSync("meetingsNext7Days.json", JSON.stringify(next7Days)); // Avg. 70 KB (5 KB GZIP)
+      fs.writeFileSync("meetingsNext24Hours.json", JSON.stringify(next24Hours)); // Avg 11 KB (1.9 KB GZIP)
+      console.log(`✅ Done`);
     }
 
-    fs.writeFileSync("meetingsNext7Days.json", JSON.stringify(fullWeekSchedule));
-    fs.writeFileSync("meetingsNext24Hours.json", JSON.stringify(next24Hours));
-    fs.writeFileSync("meetingsNext6Hours.json", JSON.stringify(nextSixHours));
 
-    // console.log("Uploading...");
-    // await uploadFile({
-    //   bucket: CLOUD_STORAGE_PUBLIC_BUCKET_ID,
-    //   fileName: PREBUILT_INDEX_FILE_NAME,
-    //   //fileContents: serialized
-    // });
+    console.log(`🌀 Uploading files...`);
+    await uploadJsonFile({
+      bucket: process.env.AWS_S3_BUCKET,
+      folderName: "sa",
+      fileName: "next24Hours.json.gzip",
+      fileContents: next24Hours
+    })
 
+    await uploadJsonFile({
+      bucket: process.env.AWS_S3_BUCKET,
+      folderName: "sa",
+      fileName: "next7Days.json.gzip",
+      fileContents: next7Days
+    })
+    console.log(`✅ Done`);
+
+    // Invalidate CDN
+
+
+    // Note - using a timestamp as a CallerReference defeats the Cloudfront 
+    // anti-duplicate request preventer. As this will be called infrequently,
+    // but will occasionally be called several times in rapid succession, it seems necessary to let every invalidation go through.
+    // See https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateInvalidation.html#API_CreateInvalidation_RequestSyntax
+    const invalidationUniqueId = new Date().getTime().toString();
+
+    var options = {
+      DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
+      InvalidationBatch: { 
+        CallerReference: invalidationUniqueId,
+        Paths: {
+          Quantity: 2,
+          Items: [
+             "/sa/next24Hours.json",
+             "/sa/next7Days.json",
+          ]
+        }
+      }
+    };
+
+    console.log("🌀 Invalidating CDN...");
+
+    const AWS_CREDS = RUNNING_IN_DEVELOPMENT_MODE ? 
+      {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY
+      } : 
+      undefined;
+
+    await new AWS.CloudFront(AWS_CREDS).createInvalidation(options).promise();
+
+    console.log("✅ Invalidated");
+
+    console.log(`✅ Success!`);
+    await sendSlackNotification("✅ NextMeeting schedules regenerated")
   } catch (err) {
     console.error(err);
-    
+    await sendSlackNotification(`❗️ Error! ${err} ${JSON.stringify(err)}`);
     return { statusCode: 500, body: err.toString() }
   }
 }
 
-exports.handler();
+// Dev only
+if(RUNNING_IN_DEVELOPMENT_MODE) {
+  exports.handler();
+}

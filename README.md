@@ -1,110 +1,64 @@
 # next-meeting-regenerate-index
 
+Lambda function to generate schedule JSON files for NextMeeting project.
 
+## Usage
 
-## Stats
+### Dev
 
-Full 7 day schedule: 70 KB
-
-
-## Deploy the sample application
-
-The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
-
-To use the SAM CLI, you need the following tools.
-
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* Node.js - [Install Node.js 10](https://nodejs.org/en/), including the NPM package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
-
-To build and deploy your application for the first time, run the following in your shell:
+1. Clone repo
+2. Populate `.env` in the project root (See `.env.example`) and _Creating AWS Resources_ below.
+3. Run:
 
 ```bash
-sam build
-sam deploy --guided
+cd regenerate-schedule
+npm i # Only required first time
+node app.js
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+> The function will run in the standard Node.js environment, bypassing the need for slow and clunky Lambda emulation tools (SA, Docker, etc.).
 
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modified IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
+> Environment variables will be picked up from `.env` in project root. The function will explicitly fail if required variables are missing.
 
-You can find your API Gateway Endpoint URL in the output values displayed after deployment.
+### Deploy
 
-## Use the SAM CLI to build and test locally
+1. Run `regenerate-schedule/deploy.sh`
 
-Build your application with the `sam build` command.
+## Roadmap
 
-```bash
-next-meeting-regenerate-index$ sam build
-```
+### Dev
+- [x] Load contents of Google sheet
+- [x] Transform into schedule JSON
+- [x] `gzip` and upload to S3
+- [x] Invalidate Cloudfront
+- [x] Slack notifications on success and failure
 
-The SAM CLI installs dependencies defined in `hello-world/package.json`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+### DevOps
+- [x] Create the bucket and Cloudfront distribution
+- [x] Create an IAM user for local testing and deploying code
+- [x] Deploy
+- [] Configure Lambda to be triggered once an hour (When UI is ready)
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
+### Future
+* Maybe store a small stats JSON in S3 and compare with it to detect changes. If nothing has changed we can save on S3 bandwidth and Cloudfront invalidations. (Maybe run anyway once every 6-12 hours to scroll the files forward by 24 hours)
 
-Run functions locally and invoke them with the `sam local invoke` command.
+## Thank You
 
-```bash
-next-meeting-regenerate-index$ sam local invoke HelloWorldFunction --event events/event.json
-```
+* `google-spreadsheet` - Google Sheets Node.js library
+* Luxon - Phenomenal timezone-aware date library
+* AWS S3, Lambda, Cloudfront, (and SDK, of course)
 
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
+### Appendix: Creating AWS resources
 
-```bash
-next-meeting-regenerate-index$ sam local start-api
-next-meeting-regenerate-index$ curl http://localhost:3000/
-```
+1. In the AWS console, create
+  1. A Lambda function (Node.js 12+)
+  2. An IAM role with permission to update the function code (`UpdateFunctionCode`)
+  3. An S3 bucket (private access only)
+  4. A Cloudfront distibution pointing at the S3 bucket
+2. Update `.env` with these values
+3. In the AWS Lambda console, configure the environment variables from your `.env`. (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` will automatically set by the Lambda environment)
+4. In the IAM console for your function's execution role (Find it in `Lambda Console > Configuration > Basic settings > "View <lambda name> role on the IAM console."`), give the function the following permissions:
+  * `s3 PutObject` and `s3 GetObject` for your S3 bucket
+  * `cloudfront CreateInvalidation` for your Cloudfront invalidation
 
-The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
-
-```yaml
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
-```
-
-## Add a resource to your application
-The application template uses AWS Serverless Application Model (AWS SAM) to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
-
-## Fetch, tail, and filter Lambda function logs
-
-To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs generated by your deployed Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
-
-`NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
-
-```bash
-next-meeting-regenerate-index$ sam logs -n HelloWorldFunction --stack-name next-meeting-regenerate-index --tail
-```
-
-You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
-
-## Unit tests
-
-Tests are defined in the `hello-world/tests` folder in this project. Use NPM to install the [Mocha test framework](https://mochajs.org/) and run unit tests.
-
-```bash
-next-meeting-regenerate-index$ cd hello-world
-hello-world$ npm install
-hello-world$ npm run test
-```
-
-## Cleanup
-
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
-
-```bash
-aws cloudformation delete-stack --stack-name next-meeting-regenerate-index
-```
-
-## Resources
-
-See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
-
-Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
+> Configure the function to run every hour using EventBridge

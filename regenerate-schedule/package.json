@@ -1,5 +1,5 @@
 {
-  "name": "hello_world",
+  "name": "next-meeting-regenerate-schedule",
   "version": "1.0.0",
   "description": "hello world sample for NodeJS",
   "main": "app.js",
@@ -7,17 +7,16 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.18.0",
-    "dotenv": "^8.2.0",
     "google-spreadsheet": "^3.0.13",
-    "luxon": "^1.25.0",
-    "rrule": "^2.6.6"
+    "isomorphic-fetch": "^3.0.0",
+    "luxon": "^1.25.0"
   },
   "scripts": {
     "test": "mocha tests/unit/",
     "run": "node ./scripts/run.js"
   },
   "devDependencies": {
+    "aws-sdk": "^2.771.0",
     "chai": "^4.2.0",
     "mocha": "^6.1.4"
   }

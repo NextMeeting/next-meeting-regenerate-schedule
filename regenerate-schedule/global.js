@@ -1,3 +1,5 @@
+require("isomorphic-fetch");
+
 function log(str) {
   if(!process.env.IS_TEST_MODE) console.log(str);
 }
@@ -30,10 +32,12 @@ async function sendSlackNotification(text) {
   if(process.env.IS_TEST_MODE) return;
   const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
   if(!SLACK_WEBHOOK_URL) return;  
+  const logDeeplink = getCloudWatchLogDeeplink();
+  const slackLink = logDeeplink ? ` <${logDeeplink}| Logs ›>` : `(\`<dev>\`)`
   await fetch(SLACK_WEBHOOK_URL, {
     method: 'post',
     headers: {'content-type': 'application/json'},
-    body: JSON.stringify({"text": text})
+    body: JSON.stringify({"text": text + slackLink})
   }) 
 }
 
