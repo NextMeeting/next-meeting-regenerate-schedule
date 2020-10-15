@@ -24,11 +24,12 @@ const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
 
 const RUNNING_IN_DEVELOPMENT_MODE = !process.env.AWS_LAMBDA_LOG_GROUP_NAME;
 
+let fs;
 
 // If we're running outside of AWS Lambda, load 
 // env vars from a .env file in project root
 if(RUNNING_IN_DEVELOPMENT_MODE) {
-  const fs = require('fs');
+  fs = require('fs');
   const path = require('path');
 
   const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
@@ -117,16 +118,28 @@ const map = (i, fn) => Array.from({length: i}).map((_, index) => fn(index));
 const getRowContent = sheet => rowNumber => map(COLUNM_COUNT, i => sheet.getCell(rowNumber, i)._rawData.formattedValue);
 
 const VALID_ZOOM_PASSWORD_REGEX=/[a-z0-9]/ig
-const MATCH_AA_SURROUNDED_BY_WHITESPACE = /\s+aa\s+/ig;
-const MATCH_OPEN_MEETING_SURROUNDED_BY_WHITESPACE = /\s+open\s+/ig;
+const MATCH_AA = /\s+aa\s+|^aa\s+/ig;
+const MATCH_OPEN_MEETING = /\s+open\s+|^open\s/ig;
+const MATCH_WOMEN_ONLY= /women|woman|female/ig
+const MATCH_MEN_ONLY=/men|man|male/ig
 
 const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol}) => {
+  let gender;
+  if(MATCH_WOMEN_ONLY.test(meetingName)) {
+    gender = "WOMEN_ONLY";
+  } else if(MATCH_MEN_ONLY.test(meetingName)) {
+    gender = "MEN_ONLY"
+  } else {
+    gender = "ALL"
+  }
+  
+
   return {
     name: meetingName,
     nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
     connectionDetails: {
       platform: 'zoom',
-      mustContactForConnectionInfo: VALID_ZOOM_PASSWORD_REGEX.test(zoomMeetingPassword),
+      mustContactForConnectionInfo: !VALID_ZOOM_PASSWORD_REGEX.test(zoomMeetingPassword),
       meetingId: zoomMeetingId,
       password: zoomMeetingPassword,
       joinUrl: zoomJoinUrl
@@ -138,10 +151,10 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
       hostLocation: "",
       localTimezoneOffset: undefined, 
       language: "en",
-      fellowship: MATCH_AA_SURROUNDED_BY_WHITESPACE.test(meetingName) ? "aa" : "sa",
+      fellowship: MATCH_AA.test(meetingName) ? "aa" : "sa",
       restrictions: {
-        openMeeting: MATCH_OPEN_MEETING_SURROUNDED_BY_WHITESPACE.test(meetingName),
-        gender: "ALL"
+        openMeeting: MATCH_OPEN_MEETING.test(meetingName),
+        gender,
       }
     }
   }
