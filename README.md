@@ -20,6 +20,8 @@ node app.js
 
 > Environment variables will be picked up from `.env` in project root. The function will explicitly fail if required variables are missing.
 
+> In development, the generated files will be stored locally on disk as well for inspection
+
 ### Deploy
 
 1. Run `regenerate-schedule/deploy.sh`
