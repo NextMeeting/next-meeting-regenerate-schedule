@@ -20,38 +20,36 @@ const DEVELOPMENT_ENV_FILE_PATH = "../.env"
 
 const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
 
+const { invalidateCdn } = require("./invalidateCdn.js")
+
 
 
 const RUNNING_IN_DEVELOPMENT_MODE = !process.env.AWS_LAMBDA_LOG_GROUP_NAME;
 
-let fs;
+const fs = require('fs');
+const path = require('path');
+
+const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
+
+const readJSONFile = pipe(
+  resolveFilePath,
+  fs.readFileSync,
+  buffer => buffer.toString()
+)
+
+function loadEnvVars() {
+  const envVars = readJSONFile(DEVELOPMENT_ENV_FILE_PATH).
+    split("\n").
+    map(line => line.split("="));
+
+  envVars.forEach(([key, value])=>{
+    process.env[key] = value;
+  });
+}
 
 // If we're running outside of AWS Lambda, load 
 // env vars from a .env file in project root
-if(RUNNING_IN_DEVELOPMENT_MODE) {
-  fs = require('fs');
-  const path = require('path');
-
-  const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
-
-  const readJSONFile = pipe(
-    resolveFilePath,
-    fs.readFileSync,
-    buffer => buffer.toString()
-  )
-
-  function loadEnvVars() {
-    const envVars = readJSONFile(DEVELOPMENT_ENV_FILE_PATH).
-      split("\n").
-      map(line => line.split("="));
-
-    envVars.forEach(([key, value])=>{
-      process.env[key] = value;
-    });
-  }
-
-  loadEnvVars();
-}
+if(RUNNING_IN_DEVELOPMENT_MODE) loadEnvVars();
 
 
 validateEnvVars([
@@ -147,6 +145,7 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
     contactInfo: contactInfo,
     notes: "",
     participantCount: "",
+    durationMinutes: 60,
     metadata: {
       hostLocation: "",
       localTimezoneOffset: undefined, 
@@ -160,6 +159,12 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
   }
 }
 
+
+const ALLOW_ALREADY_STARTED_MEETINGS_THRESHOLD = {
+  hours: 1, 
+  minutes: 30
+}
+
 function getNextOccurance({dayOfWeekEST, startTimeEST}) {
   const {hour, minute} = parseHourAndMinute(startTimeEST);
   const luxonDate = DateTime.fromObject({
@@ -170,9 +175,13 @@ function getNextOccurance({dayOfWeekEST, startTimeEST}) {
   }).toUTC();
   const luxonDateAsISO = luxonDate.toISO();
   if(luxonDateAsISO === null) console.error(`❗️ null date! Info: ${dayOfWeekEST} ${startTimeEST}`);
-  if(luxonDateAsISO < new Date().toISOString()) { // Only generate meetings in the future
+
+  const meetingAlreadyStartedAllowThreshold = DateTime.local().minus(ALLOW_ALREADY_STARTED_MEETINGS_THRESHOLD).toUTC().toISO();
+
+  if(luxonDateAsISO < meetingAlreadyStartedAllowThreshold) { // Only generate meetings in the future
     return luxonDate.plus({weeks: 1}).toISO();
   }
+
   return luxonDateAsISO;
 }
 
@@ -232,8 +241,10 @@ const ROWS_OCCUPIED_BY_HEADER = 2;
 const retrieveFormattedMeetingFromSheet = sheet => i => {
   if(i <= ROWS_OCCUPIED_BY_HEADER) return;
   return pipe(
+    data => {console.log(data); return data},
     getRowContent(sheet),
     rowToJson,
+    data => {console.log(data); return data},
     formatMeetingInfo
   )(i)
 }
@@ -244,6 +255,7 @@ function sortMeetingFn({nextOccurrence: a}, {nextOccurrence: b}) {
   return 0;
 }
 
+const ROWS_TO_IGNORE_FROM_END = 2;
 
 exports.handler = async (event, context) => {
 
@@ -258,7 +270,7 @@ exports.handler = async (event, context) => {
     console.log("Loaded");
 
 
-    const meetingCount = sheet.rowCount - ROWS_OCCUPIED_BY_HEADER;
+    const meetingCount = sheet.rowCount - ROWS_TO_IGNORE_FROM_END;
     const meetingList = map(meetingCount, retrieveFormattedMeetingFromSheet(sheet)).
       filter(item => item !== undefined).
       sort(sortMeetingFn);
@@ -267,7 +279,6 @@ exports.handler = async (event, context) => {
     
 
     const twentyFourHoursFromNow = DateTime.local().plus({hours: 24}).toUTC().toISO();
-    const sixHoursFromNow = DateTime.local().plus({hours: 6}).toUTC().toISO();
 
     const next7Days = {
       metadata: {
@@ -310,41 +321,13 @@ exports.handler = async (event, context) => {
     })
     console.log(`✅ Done`);
 
-    // Invalidate CDN
-
-
-    // Note - using a timestamp as a CallerReference defeats the Cloudfront 
-    // anti-duplicate request preventer. As this will be called infrequently,
-    // but will occasionally be called several times in rapid succession, it seems necessary to let every invalidation go through.
-    // See https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateInvalidation.html#API_CreateInvalidation_RequestSyntax
-    const invalidationUniqueId = new Date().getTime().toString();
-
-    var options = {
-      DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
-      InvalidationBatch: { 
-        CallerReference: invalidationUniqueId,
-        Paths: {
-          Quantity: 2,
-          Items: [
-             "/sa/next24Hours.json",
-             "/sa/next7Days.json",
-          ]
-        }
-      }
-    };
-
-    console.log("🌀 Invalidating CDN...");
-
-    const AWS_CREDS = RUNNING_IN_DEVELOPMENT_MODE ? 
-      {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY
-      } : 
-      undefined;
-
-    await new AWS.CloudFront(AWS_CREDS).createInvalidation(options).promise();
-
-    console.log("✅ Invalidated");
+    await invalidateCdn({
+      files:[
+        "/sa/next24Hours.json.gzip",
+        "/sa/next7Days.json.gzip",
+      ],
+      awsCredentials: AWS_CREDS
+    });
 
     console.log(`✅ Success!`);
     await sendSlackNotification("✅ NextMeeting schedules regenerated")

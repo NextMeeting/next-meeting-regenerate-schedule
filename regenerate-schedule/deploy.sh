@@ -12,6 +12,7 @@ mv node_modules__prod node_modules
 
 zip -r function.zip \
   app.js \
+  invalidateCdn.js \
   global.js \
   node_modules \
   package.json
