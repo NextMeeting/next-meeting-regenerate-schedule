@@ -15,6 +15,7 @@ const AWS = require('aws-sdk');
 const { DateTime } = require("luxon");
 
 const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotification, sendErrorNotification, getCloudWatchLogDeeplink, sleep } = require("./global.js");
+const { updateStaticSite } = require("./updateStaticSite.js")
 
 const DEVELOPMENT_ENV_FILE_PATH = "../.env"
 
@@ -61,7 +62,8 @@ validateEnvVars([
   "CLOUDFRONT_DISTRIBUTION_ID",
   "AWS_S3_BUCKET",
   "AWS_S3_REGION",
-  "SLACK_WEBHOOK_URL"
+  "SLACK_WEBHOOK_URL",
+  "STATIC_SITE_S3_BUCKET"
 ])
 
 
@@ -115,13 +117,30 @@ const map = (i, fn) => Array.from({length: i}).map((_, index) => fn(index));
 
 const getRowContent = sheet => rowNumber => map(COLUNM_COUNT, i => sheet.getCell(rowNumber, i)._rawData.formattedValue);
 
+const VALID_ZOOM_ID_REGEX=/[0-9]{3}/ig
 const VALID_ZOOM_PASSWORD_REGEX=/[a-z0-9]/ig
+const HAS_ALPHABET = /[a-z]/ig
 const MATCH_AA = /\s+aa\s+|^aa\s+/ig;
 const MATCH_OPEN_MEETING = /\s+open\s+|^open\s/ig;
 const MATCH_WOMEN_ONLY= /women|woman|female/ig
 const MATCH_MEN_ONLY=/men|man|male/ig
 
+
+const MATCHES_DIGITS_REGEX = /\d/
+
+const containsNumbers = str => MATCHES_DIGITS_REGEX.test(str);
+
 const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol}) => {
+  //console.log(`Formatting ${dayOfWeekEST} ${startTimeEST} ${meetingName}`);
+  if(startTimeEST === undefined) {
+    console.log(`❗️ ${dayOfWeekEST} ${startTimeEST} ${meetingName} No startTimeEST! Skipping`);
+    return;
+  }
+  if(!containsNumbers(startTimeEST)) {
+    console.log(`❗️ ${dayOfWeekEST} ${startTimeEST} ${meetingName} startTimeEST has no numbers! Skipping.`);
+    return;
+  }
+
   let gender;
   if(MATCH_WOMEN_ONLY.test(meetingName)) {
     gender = "WOMEN_ONLY";
@@ -132,12 +151,16 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
   }
   
 
+  const isValidZoomId = !HAS_ALPHABET.test(zoomMeetingId);
+  //console.log(`${isValidZoomId ? "ℹ️" : "❌"} Valid Zoom regex: "${zoomMeetingId}" -> ${isValidZoomId}`);
+
+  //console.log(meetingName)
   return {
     name: meetingName,
     nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
     connectionDetails: {
       platform: 'zoom',
-      mustContactForConnectionInfo: !VALID_ZOOM_PASSWORD_REGEX.test(zoomMeetingPassword),
+      mustContactForConnectionInfo: !isValidZoomId,
       meetingId: zoomMeetingId,
       password: zoomMeetingPassword,
       joinUrl: zoomJoinUrl
@@ -241,10 +264,10 @@ const ROWS_OCCUPIED_BY_HEADER = 2;
 const retrieveFormattedMeetingFromSheet = sheet => i => {
   if(i <= ROWS_OCCUPIED_BY_HEADER) return;
   return pipe(
-    data => {console.log(data); return data},
+    // data => {console.log(data); return data},
     getRowContent(sheet),
     rowToJson,
-    data => {console.log(data); return data},
+    // data => {console.log(data); return data},
     formatMeetingInfo
   )(i)
 }
@@ -271,14 +294,21 @@ exports.handler = async (event, context) => {
 
 
     const meetingCount = sheet.rowCount - ROWS_TO_IGNORE_FROM_END;
-    const meetingList = map(meetingCount, retrieveFormattedMeetingFromSheet(sheet)).
+    console.log(`${meetingCount} raw meetings`);
+    // const meetingList = map(meetingCount, retrieveFormattedMeetingFromSheet(sheet)).
+    //   filter(item => item !== undefined).
+    //   sort(sortMeetingFn);
+
+    const beforeFiltering = map(meetingCount, retrieveFormattedMeetingFromSheet(sheet));
+    console.log(`Before filter: ${beforeFiltering.length} entries`);
+    const meetingList = beforeFiltering.
       filter(item => item !== undefined).
       sort(sortMeetingFn);
 
     console.log(`Generated schedule (${meetingList.length} total meetings)`);
     
 
-    const twentyFourHoursFromNow = DateTime.local().plus({hours: 24}).toUTC().toISO();
+    const twentyFourHoursFromNow = DateTime.local().plus({hours: 48}).toUTC().toISO();
 
     const next7Days = {
       metadata: {
@@ -304,7 +334,6 @@ exports.handler = async (event, context) => {
       console.log(`✅ Done`);
     }
 
-
     console.log(`🌀 Uploading files...`);
     await uploadJsonFile({
       bucket: process.env.AWS_S3_BUCKET,
@@ -321,10 +350,11 @@ exports.handler = async (event, context) => {
     })
     console.log(`✅ Done`);
 
+    await updateStaticSite(next24Hours);
+
     await invalidateCdn({
       files:[
-        "/sa/next24Hours.json.gzip",
-        "/sa/next7Days.json.gzip",
+        "/*",
       ],
       awsCredentials: AWS_CREDS
     });
