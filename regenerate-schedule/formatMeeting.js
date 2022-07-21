@@ -1,7 +1,7 @@
 // Imports
 
 const { DateTime } = require("luxon");
-const extractEmail = require('extract-email-address');
+const extractEmail = require('extract-email-address').default;
 
 const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotification, sendErrorNotification, getCloudWatchLogDeeplink, sleep, loadEnvVars, readFile, resolveFilePath, pipe, map } = require("./global.js");
 
@@ -86,6 +86,8 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
     meetingPassword:zoomMeetingPassword,
     joinUrl: zoomJoinUrl?.trim()
   })
+	
+	const feedbackEmail = extractEmail(contactInfo || '')?.[0];
 
 	//console.log(meetingName)
 	return {
@@ -99,6 +101,7 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
 			joinUrl: zoomJoinUrl
 		},
 		contactInfo: contactInfo,
+		feedbackEmail: feedbackEmail?.email,
 		notes,
 		participantCount: "",
 		durationMinutes: 60,

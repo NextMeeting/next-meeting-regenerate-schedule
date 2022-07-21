@@ -94,16 +94,16 @@ const configs = [
     googleSheetId: '1UJneS5GKFQSIy_iAfkLE21nRC_E8VzJ8diTT4Z3JnrA',
     siteUUID: 'B0E7F18B-4CF5-49FF-BBD3-75E1CA52AA5E'
   },
-  // {
-  //   name: 'SA',
-  //   googleSheetId: '1_QxT6VIm1HTLKSl71DtDqSMWVZYrdbqSl0WSF0Ch6g4',
-  //   siteUUID: '275EE30A-220F-4FF2-A950-0ED2B5E4C257'
-  // },
-  // {
-  //   name: 'ACA',
-  //   googleSheetId: '1ukZ53qRUZLOy7sXBzMHpHkZOecuo97ewX8P0pXpk95g',
-  //   siteUUID: '0BF67B1D-444F-45F5-BA5B-E3ADD7E4C30B'
-  // }
+  {
+    name: 'SA',
+    googleSheetId: '1_QxT6VIm1HTLKSl71DtDqSMWVZYrdbqSl0WSF0Ch6g4',
+    siteUUID: '275EE30A-220F-4FF2-A950-0ED2B5E4C257'
+  },
+  {
+    name: 'ACA',
+    googleSheetId: '1ukZ53qRUZLOy7sXBzMHpHkZOecuo97ewX8P0pXpk95g',
+    siteUUID: '0BF67B1D-444F-45F5-BA5B-E3ADD7E4C30B'
+  }
 ]
 
 
