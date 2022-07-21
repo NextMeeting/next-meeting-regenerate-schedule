@@ -12,8 +12,12 @@ mv node_modules__prod node_modules
 
 zip -r function.zip \
   app.js \
+  formatMeeting.js \
+  generateSchedule.js \
   invalidateCdn.js \
+  rebuildAndDeploySite.js \
   updateStaticSite.js \
+  sim-2021.json \
   global.js \
   node_modules \
   package.json
@@ -34,4 +38,3 @@ aws lambda update-function-code \
   --region='us-east-1' && \
 terminal-notifier -title $LAMBDA_FUNCTION_NAME -message '✅ Deploy Complete' -open "https://console.aws.amazon.com/lambda/home?region=us-east-1#/functions/${LAMBDA_FUNCTION_NAME}" -appIcon $NOTIFICATION_ICON_PATH && \
 curl -X POST -H 'Content-type: application/json' --data '{"text":"🚀 RegenerateSchedule redeployed"}' $SLACK_WEBHOOK_URL
-

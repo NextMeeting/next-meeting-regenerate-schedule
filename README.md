@@ -39,7 +39,7 @@ node app.js
 - [x] Create the bucket and Cloudfront distribution
 - [x] Create an IAM user for local testing and deploying code
 - [x] Deploy
-- [ ] Configure Lambda to be triggered once an hour (When UI is ready)
+- [x] Configure Lambda to be triggered once an hour
 
 ### Future
 * Maybe store a small stats JSON in S3 and compare with it to detect changes. If nothing has changed we can save on S3 bandwidth and Cloudfront invalidations. (Maybe run anyway once every 6-12 hours to scroll the files forward by 24 hours)

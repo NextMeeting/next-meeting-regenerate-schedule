@@ -1,4 +1,10 @@
+
+const fs = require('fs');
+const path = require('path');
+const zlib = require('zlib');
+
 require("isomorphic-fetch");
+const AWS = require('aws-sdk');
 
 function log(str) {
   if(!process.env.IS_TEST_MODE) console.log(str);
@@ -92,6 +98,44 @@ function parseBoolean(str) {
 
 const normalizeToken = str => str.trim().toLowerCase();
 
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+
+const resolveFilePath = filepath => path.resolve(process.cwd(), filepath)
+
+const readFile = pipe(
+  resolveFilePath,
+  fs.readFileSync,
+  buffer => buffer.toString()
+)
+
+
+
+function loadEnvVars(envFilePath) {
+  const envVars = readFile(envFilePath).
+    split("\n").
+    map(line => line.split("="));
+
+  envVars.forEach(([key, value])=>{
+    process.env[key] = value;
+  });
+}
+
+const map = (i, fn) => Array.from({length: i}).map((_, index) => fn(index));
+
+
+async function uploadJsonFile({bucket, folderName = "", fileName, fileContents}) {
+  return new Promise(function(resolve, reject) {
+      s3.upload({
+          Bucket: bucket,
+          Key: `${folderName}/${fileName}`,
+          Body: zlib.gzipSync(JSON.stringify(fileContents))
+      }).
+      promise().
+      then(resolve, reject);
+  });
+}
+
+
 exports.log = log;
 exports.error = error;
 exports.validateEnvVars = validateEnvVars;
@@ -106,3 +150,10 @@ exports.getCloudWatchLogDeeplink = getCloudWatchLogDeeplink;
 exports.sleep = sleep;
 
 exports.parseBoolean = parseBoolean;
+
+exports.loadEnvVars = loadEnvVars;
+exports.readFile = readFile;
+exports.resolveFilePath = resolveFilePath;
+exports.pipe = pipe;
+exports.map = map;
+exports.uploadJsonFile = uploadJsonFile;

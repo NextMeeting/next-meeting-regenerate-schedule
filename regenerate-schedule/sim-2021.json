@@ -1,0 +1,597 @@
+{
+  "title": "Welcome to SIM 2021!",
+  "eventTimestamps": {
+    "start": "2021-11-18T12:00:00Z",
+    "end": "2021-11-19T12:00:00Z"
+  },
+  "donateDetails": {
+    "title": "Donate Now",
+    "url": "https://simhp.com/7th/"
+  },
+  "channels": [
+    {
+      "channelTitle": "Channel A",
+      "scheduleModalTitle": "Channel A Schedule",
+      "channelSubject": "Speakers",
+      "youTubeUrl": "CHANNEL_A_YOUTUBE_LINK_HERE",
+      "connectionDetails": {
+        "joinUrl": "https://us02web.zoom.us/j/88409388259",
+        "zoomId": "884 0938 8259",
+        "zoomPassword": ""
+      },
+      "notes": "",
+      "sessions": [
+        {
+          "startTimestamp": "2021-11-18T12:00:00Z",
+          "title": "Intro Session",
+          "speaker": "SIM Team",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T13:00:00Z",
+          "title": "Getting Married in Sobriety",
+          "speaker": "Zofia M",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T14:00:00Z",
+          "title": "Step 1",
+          "speaker": "Daniel T",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T15:00:00Z",
+          "title": "Rebuilding Broken Trust",
+          "speaker": "Hesham S",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T16:00:00Z",
+          "title": "Step 2",
+          "speaker": "Alex (Europe)",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T17:00:00Z",
+          "title": "Importance of Meetings in COVID",
+          "speaker": "Carolyne K",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T18:00:00Z",
+          "title": "Acceptance and Gratitude",
+          "speaker": "Kathrin W",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T19:00:00Z",
+          "title": "Overcoming Fear",
+          "speaker": "Jackie H",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T20:00:00Z",
+          "title": "Step 3",
+          "speaker": "Stan H",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T21:00:00Z",
+          "title": "Spiritual Awakening and Service",
+          "speaker": "Brendan T",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T22:00:00Z",
+          "title": "Lust is not Love",
+          "speaker": "Simon W",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T23:00:00Z",
+          "title": "Finding SA Solutions in the AA Steps",
+          "speaker": "John I",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T00:00:00Z",
+          "title": "Shame, Perfectionism and Addiction",
+          "speaker": "Tricia S",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T01:00:00Z",
+          "title": "Step 4 and 5",
+          "speaker": "Jay F",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T02:00:00Z",
+          "title": "Our Recommendations are Suggestions",
+          "speaker": "Dorota",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T03:00:00Z",
+          "title": "Step 12",
+          "speaker": "Wendi",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T04:00:00Z",
+          "title": "Emotional Lust",
+          "speaker": "Angie",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T05:00:00Z",
+          "title": "Letting Go, Letting God",
+          "speaker": "Mathew W",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T06:00:00Z",
+          "title": "It's a Family Disease",
+          "speaker": "Bernd S",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T07:00:00Z",
+          "title": "Service and Sobriety",
+          "speaker": "Noura T",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T08:00:00Z",
+          "title": "Taking the Actions of Love",
+          "speaker": "Cathal M",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T09:00:00Z",
+          "title": "Relapse Prevention",
+          "speaker": "Nicholas S",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T10:00:00Z",
+          "title": "Any Lengths Necessary",
+          "speaker": "Shim F",
+          "sessionType": "Speaker",
+          "language": "English",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "channelTitle": "Channel B",
+      "scheduleModalTitle": "Channel B Schedule",
+      "channelSubject": "Panels & Workshops",
+      "youTubeUrl": "CHANNEL_B_YOUTUBE_LINK_HERE",
+      "connectionDetails": {
+        "joinUrl": "https://us02web.zoom.us/j/84747705307?pwd=dFdLQjVHeHRVQ2xQZHRwRjhzL1Mzdz09",
+        "zoomId": "847 4770 5307",
+        "zoomPassword": "121212"
+      },
+      "sessions": [
+        {
+          "startTimestamp": "2021-11-18T13:00:00Z",
+          "title": "Young Adult",
+          "speaker": "Wojtek",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T14:00:00Z",
+          "title": "Why Working the Steps is Important",
+          "speaker": "Michael J ",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T15:00:00Z",
+          "title": "Group & Fellowship Inventory",
+          "speaker": "Brendan T & Jon H",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T16:00:00Z",
+          "title": "Not Outgrowing My Need For God ",
+          "speaker": "Margot C",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T17:00:00Z",
+          "title": "Fireside Chat Live #1: Interview with an SA Oldtimer",
+          "speaker": "Daniel T",
+          "sessionType": "Interview",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T18:00:00Z",
+          "title": "Fireside Chat Live #2: Interview with an SA Oldtimer",
+          "speaker": "Daniel T",
+          "sessionType": "Interview",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T19:00:00Z",
+          "title": "Recovery Songs / Sing Along",
+          "speaker": "SA Songs, Ben V, Cathal, Gene T and others",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T20:00:00Z",
+          "title": "Carrying the Message to Prisoners",
+          "speaker": "CFC Committee, Paul Z",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T21:00:00Z",
+          "title": "Carrying the Message to Helping Professionals ",
+          "speaker": "Support for Institutions and Professionals Committee",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T22:00:00Z",
+          "title": "Effects of Covid on SA",
+          "speaker": "Rich P",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T23:00:00Z",
+          "title": "Starting A New Meeting ",
+          "speaker": "Jerry W & Gene T ",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T00:00:00Z",
+          "title": "Interview with a Convicted Sex Offender",
+          "speaker": "Royce P",
+          "sessionType": "Interview",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T01:00:00Z",
+          "title": "4th Step Resentment Inventory",
+          "speaker": "Dennis T",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T02:00:00Z",
+          "title": "Supporting Women in SA",
+          "speaker": "Racquel & Susie & Brian",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T03:00:00Z",
+          "title": "SA in India",
+          "speaker": "Manish G",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T04:00:00Z",
+          "title": "SA in Iran",
+          "speaker": "Mohammad",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T05:00:00Z",
+          "title": "Young Adult",
+          "speaker": " Young Adult, Kelsey D",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T06:00:00Z",
+          "title": "Growth of SA in Sub Saharan Africa Countries",
+          "speaker": "Sub Saharan Africa Panel, Dan K",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T07:00:00Z",
+          "title": "SA in The Persian Gulf ",
+          "speaker": "Ameer",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T08:00:00Z",
+          "title": "Help For Chronic Relapsers",
+          "speaker": "Pete N",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T09:00:00Z",
+          "title": "Starting a Zoom Meeting & Online Services ",
+          "speaker": "Daniel T & Gene T & Brendan T",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T10:00:00Z",
+          "title": "Women in Cairo Recovery/Arabic",
+          "speaker": "Asmaa A",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T11:00:00Z",
+          "title": "Grand Finale",
+          "speaker": "Everyone",
+          "sessionType": "Panel",
+          "language": "English",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "channelTitle": "Channel C",
+      "scheduleModalTitle": "Channel C Schedule",
+      "channelSubject": "International Languages",
+      "youTubeUrl": "",
+      "connectionDetails": {
+        "joinUrl": "https://us02web.zoom.us/j/89755988751?pwd=YncvTTNsZDB3cDVwUGZYTFFsS3E4Zz09",
+        "zoomId": "897 5598 8751",
+        "zoomPassword": "121212"
+      },
+      "sessions": [
+        {
+          "startTimestamp": "2021-11-18T13:00:00Z",
+          "title": "中文会话 (Chinese session)",
+          "speaker": "Mike M.",
+          "sessionType": "Other",
+          "language": "Chinese",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T14:00:00Z",
+          "title": "Français (French session)",
+          "speaker": "Martin",
+          "sessionType": "Other",
+          "language": "French",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T15:00:00Z",
+          "title": "русский (Russian session)",
+          "speaker": "Dima",
+          "sessionType": "Other",
+          "language": "Russian",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T16:00:00Z",
+          "title": "Slovenský (Slovak session)",
+          "speaker": "Lojzo",
+          "sessionType": "Other",
+          "language": "Slovak",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T17:00:00Z",
+          "title": "Kiswahili (Swahili session)",
+          "speaker": "Mathew",
+          "sessionType": "Other",
+          "language": "Swahili",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T18:00:00Z",
+          "title": "אידיש (Yiddish session)",
+          "speaker": "Aron Shulem F.",
+          "sessionType": "Other",
+          "language": "Yiddish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T19:00:00Z",
+          "title": "Polskie (Polish session)",
+          "speaker": "Pawel J",
+          "sessionType": "Other",
+          "language": "Polish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T20:00:00Z",
+          "title": "Deutsch (German session)",
+          "speaker": "Josef Z",
+          "sessionType": "Other",
+          "language": "German",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T21:00:00Z",
+          "title": "Español #1 (Spanish session)",
+          "speaker": "Juan Carlos",
+          "sessionType": "Other",
+          "language": "Spanish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T22:00:00Z",
+          "title": "Español #2 (Spanish session)",
+          "speaker": "Juan Carlos",
+          "sessionType": "Other",
+          "language": "Spanish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-18T23:00:00Z",
+          "title": "Español #3 (Spanish session)",
+          "speaker": "Juan Carlos",
+          "sessionType": "Other",
+          "language": "Spanish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T00:00:00Z",
+          "title": "Español #4 (Spanish session)",
+          "speaker": "Manuel",
+          "sessionType": "Other",
+          "language": "Spanish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T01:00:00Z",
+          "title": "Português (Portuguese session)",
+          "speaker": "Aaron T",
+          "sessionType": "Other",
+          "language": "Portuguese",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T02:00:00Z",
+          "title": "Español #5 (Spanish session)",
+          "speaker": "Manuel",
+          "sessionType": "Other",
+          "language": "Spanish",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T03:00:00Z",
+          "title": "زبان فارسي (Farsi session)",
+          "speaker": "Masoud B",
+          "sessionType": "Other",
+          "language": "Farsi",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T04:00:00Z",
+          "title": "زبان فارسي (Farsi session)",
+          "speaker": "Masoud B",
+          "sessionType": "Other",
+          "language": "Farsi",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T05:00:00Z",
+          "title": "زبان فارسي (Farsi session)",
+          "speaker": "Masoud B",
+          "sessionType": "Other",
+          "language": "Farsi",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T06:00:00Z",
+          "title": "हिंदी (Hindi session)",
+          "speaker": "Shipra",
+          "sessionType": "Other",
+          "language": "Hindi",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T07:00:00Z",
+          "title": "עברית (Hebrew session)",
+          "speaker": "Arye",
+          "sessionType": "Other",
+          "language": "Hebrew",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T08:00:00Z",
+          "title": "عربي (Arabic session)",
+          "speaker": "Hesham",
+          "sessionType": "Other",
+          "language": "Arabic",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T09:00:00Z",
+          "title": "हिंदी (Hindi session)",
+          "speaker": "Animesh D",
+          "sessionType": "Other",
+          "language": "Hindi",
+          "notes": ""
+        },
+        {
+          "startTimestamp": "2021-11-19T10:00:00Z",
+          "title": "Italiana (Italian session)",
+          "speaker": "Daniele D",
+          "sessionType": "Other",
+          "language": "Italian",
+          "notes": ""
+        }
+      ]
+    }
+  ]
+}
