@@ -1,5 +1,7 @@
 // Imports
 
+const Honeybadger = require('@honeybadger-io/js')
+
 const { DateTime } = require("luxon");
 const extractEmail = require('extract-email-address').default;
 
@@ -54,66 +56,73 @@ function determinePlatform({ meetingId, meetingPassword, joinUrl }) {
 }
 
 const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol, notes = ''}) => {
-	//console.log(`Formatting ${dayOfWeekEST} ${startTimeEST} ${meetingName}`);
-	if(startTimeEST === undefined) {
-		console.log(`❗️ ${dayOfWeekEST} ${startTimeEST} ${meetingName} No startTimeEST! Skipping`);
-		return;
-	}
-	if(!containsNumbers(startTimeEST)) {
-		console.log(`❗️ ${dayOfWeekEST} ${startTimeEST} ${meetingName} startTimeEST has no numbers! Skipping.`);
-		return;
-	}
+	try {
+		// console.log(`Formatting ${dayOfWeekEST} ${startTimeEST} ${meetingName}`);
+		if(startTimeEST === undefined) {
+			console.log(`❗️ Day: ${dayOfWeekEST} startTimeEST:${startTimeEST} meetingName: ${meetingName} No startTimeEST! Skipping`);
+			return;
+		}
+		if(!containsNumbers(startTimeEST)) {
+			console.log(`❗️ Day: ${dayOfWeekEST} startTimeEST: ${startTimeEST} meetingName: ${meetingName} startTimeEST has no numbers! Skipping.`);
+			return;
+		}
+		
+		if(zoomMeetingId === undefined && zoomMeetingPassword === undefined && zoomJoinUrl === undefined) {
+			return;
+		}
 	
-	if(zoomMeetingId === undefined && zoomMeetingPassword === undefined && zoomJoinUrl === undefined) {
-		return;
-	}
-
-	let gender;
-	if(MATCH_WOMEN_ONLY.test(meetingName)) {
-		gender = "WOMEN_ONLY";
-	} else if(MATCH_MEN_ONLY.test(meetingName)) {
-		gender = "MEN_ONLY"
-	} else {
-		gender = "ALL"
-	}
+		let gender;
+		if(MATCH_WOMEN_ONLY.test(meetingName)) {
+			gender = "WOMEN_ONLY";
+		} else if(MATCH_MEN_ONLY.test(meetingName)) {
+			gender = "MEN_ONLY"
+		} else {
+			gender = "ALL"
+		}
+		
 	
-
-	const isValidZoomId = !HAS_ALPHABET.test(zoomMeetingId);
-	//console.log(`${isValidZoomId ? "ℹ️" : "❌"} Valid Zoom regex: "${zoomMeetingId}" -> ${isValidZoomId}`);
-
-  const platform = determinePlatform({
-    meetingId: zoomMeetingId,
-    meetingPassword:zoomMeetingPassword,
-    joinUrl: zoomJoinUrl?.trim()
-  })
+		const isValidZoomId = !HAS_ALPHABET.test(zoomMeetingId);
+		//console.log(`${isValidZoomId ? "ℹ️" : "❌"} Valid Zoom regex: "${zoomMeetingId}" -> ${isValidZoomId}`);
 	
-	const feedbackEmail = extractEmail(contactInfo || '')?.[0];
-
-	//console.log(meetingName)
-	return {
-		name: meetingName || "<Untitled Meeting>",
-		nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
-		connectionDetails: {
-			platform,
-			mustContactForConnectionInfo: !zoomJoinUrl,
-			meetingId: zoomMeetingId,
-			password: zoomMeetingPassword,
-			joinUrl: zoomJoinUrl
-		},
-		contactInfo: contactInfo,
-		feedbackEmail: feedbackEmail?.email,
-		notes,
-		participantCount: "",
-		durationMinutes: 60,
-		metadata: {
-			hostLocation: "",
-			localTimezoneOffset: undefined, 
-			language: "en",
-			restrictions: {
-				openMeeting: MATCH_OPEN_MEETING.test(meetingName),
-				gender,
+  	const platform = determinePlatform({
+    	meetingId: zoomMeetingId,
+    	meetingPassword:zoomMeetingPassword,
+    	joinUrl: zoomJoinUrl?.trim()
+  	})
+		
+		const feedbackEmail = extractEmail(contactInfo || '')?.[0];
+	
+		//console.log(meetingName)
+		return {
+			name: meetingName || "<Untitled Meeting>",
+			nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
+			connectionDetails: {
+				platform,
+				mustContactForConnectionInfo: !zoomJoinUrl,
+				meetingId: zoomMeetingId,
+				password: zoomMeetingPassword,
+				joinUrl: zoomJoinUrl
+			},
+			contactInfo: contactInfo,
+			feedbackEmail: feedbackEmail?.email,
+			notes,
+			participantCount: "",
+			durationMinutes: 60,
+			metadata: {
+				hostLocation: "",
+				localTimezoneOffset: undefined, 
+				language: "en",
+				restrictions: {
+					openMeeting: MATCH_OPEN_MEETING.test(meetingName),
+					gender,
+				}
 			}
 		}
+	} catch(e) {
+		console.error('❗ Error in meeting definition:');
+		console.error(e);
+		Honeybadger.notifyAsync(e);
+		console.error('⏩ Skipping.')
 	}
 }
 
@@ -124,7 +133,7 @@ const ALLOW_ALREADY_STARTED_MEETINGS_THRESHOLD = {
 }
 
 function getNextOccurance({dayOfWeekEST, startTimeEST}) {
-	const {hour, minute} = parseHourAndMinute(startTimeEST);
+	const { hour, minute } = parseHourAndMinute(startTimeEST);
 	const luxonDate = DateTime.fromObject({
 		zone: "America/New_York",
 		weekday: dayOfWeekStringToLuxonWeekdayNumber(dayOfWeekEST),

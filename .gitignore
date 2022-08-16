@@ -132,3 +132,5 @@ $RECYCLE.BIN/
 
 
 # End of https://www.gitignore.io/api/osx,node,linux,windows
+
+./regenerate-schedule/debug/schedule.json
