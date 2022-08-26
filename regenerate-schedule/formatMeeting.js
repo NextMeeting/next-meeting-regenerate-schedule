@@ -51,7 +51,7 @@ function determinePlatform({ meetingId, meetingPassword, joinUrl }) {
 	if(joinUrl.includes('.zoom.us/')) return 'zoom';
   if(SKYPE_JOIN_LINK_REGEX.test(joinUrl)) return 'skype';
 	if(joinUrl.includes('tel:')) return 'phone-number';
-	console.log(`"${joinUrl}"`)
+	// console.log(`"${joinUrl}"`)
   return 'unknown';
 }
 
@@ -59,11 +59,11 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
 	try {
 		// console.log(`Formatting ${dayOfWeekEST} ${startTimeEST} ${meetingName}`);
 		if(startTimeEST === undefined) {
-			console.log(`❗️ Day: ${dayOfWeekEST} startTimeEST:${startTimeEST} meetingName: ${meetingName} No startTimeEST! Skipping`);
+			console.error(`❗️ meetingName: ${meetingName} No startTimeEST! Skipping\nDay: ${dayOfWeekEST} startTimeEST:${startTimeEST} `);
 			return;
 		}
 		if(!containsNumbers(startTimeEST)) {
-			console.log(`❗️ Day: ${dayOfWeekEST} startTimeEST: ${startTimeEST} meetingName: ${meetingName} startTimeEST has no numbers! Skipping.`);
+			console.error(`❗️ meetingName: ${meetingName} startTimeEST has no numbers! Skipping.\nDay: ${dayOfWeekEST} startTimeEST: ${startTimeEST} `);
 			return;
 		}
 		

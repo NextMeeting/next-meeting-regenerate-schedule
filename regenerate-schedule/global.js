@@ -26,6 +26,15 @@ async function asyncForEach(array, callback) {
   }
 }
 
+async function asyncParallelForEach(array, callback) {
+  
+  const promises = array.map((item, index, array) => {
+    return callback(array[index], index, array);
+  })
+
+  return Promise.all(promises);
+}
+
 async function asyncMap(array, callback) {
   const results = [];
   for (let index = 0; index < array.length; index++) {
@@ -135,12 +144,23 @@ async function uploadJsonFile({bucket, folderName = "", fileName, fileContents})
   });
 }
 
+async function sendHoneybadgerCheckIn() {
+  const HONEYBADGER_CHECK_IN_TOKEN = process.env.HONEYBADGER_CHECK_IN_TOKEN;
+  if(!HONEYBADGER_CHECK_IN_TOKEN) {
+    console.error(`Env var HONEYBADGER_CHECK_IN_TOKEN is missing.\nSkipping check-in.`)
+  }
+  const url = `https://api.honeybadger.io/v1/check_in/${HONEYBADGER_CHECK_IN_TOKEN}`;
+  await fetch(url, { method: 'get' });
+}
 
 exports.log = log;
 exports.error = error;
 exports.validateEnvVars = validateEnvVars;
 exports.asyncMap = asyncMap;
+
 exports.asyncForEach = asyncForEach;
+exports.asyncParallelForEach = asyncParallelForEach;
+
 exports.sendSlackNotification = sendSlackNotification;
 
 exports.sendErrorNotification = sendErrorNotification;
@@ -157,3 +177,4 @@ exports.resolveFilePath = resolveFilePath;
 exports.pipe = pipe;
 exports.map = map;
 exports.uploadJsonFile = uploadJsonFile;
+exports.sendHoneybadgerCheckIn = sendHoneybadgerCheckIn;

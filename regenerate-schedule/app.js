@@ -13,7 +13,7 @@ require("isomorphic-fetch");
 const AWS = require('aws-sdk');
 const Honeybadger = require('@honeybadger-io/js')
 
-const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotification, sendErrorNotification, getCloudWatchLogDeeplink, sleep, loadEnvVars, readFile, resolveFilePath, pipe, map } = require("./global.js");
+const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotification, sendErrorNotification, getCloudWatchLogDeeplink, sleep, loadEnvVars, readFile, resolveFilePath, pipe, map, sendHoneybadgerCheckIn, asyncParallelForEach } = require("./global.js");
 
 const { updateStaticSite } = require("./updateStaticSite.js")
 const { rebuildAndDeploySite }  = require('./rebuildAndDeploySite.js');
@@ -112,7 +112,7 @@ exports.handler = async (event, context) => {
   try {
       
      const errors = [];
-     await asyncForEach(configs, async (config) => {
+     await asyncParallelForEach(configs, async (config) => {
        try {
          await rebuildAndDeploySite(config)
        } catch(error) {
@@ -136,7 +136,11 @@ exports.handler = async (event, context) => {
     });
 
     console.log(`✅ Success!`);
+    
     await sendSlackNotification("✅ NextMeeting schedules regenerated")
+    await sendHoneybadgerCheckIn();
+    
+    return { statusCode: 200, body: 'Success' }
   } catch (err) {
     console.error(err);
     await Honeybadger.notifyAsync(error);
