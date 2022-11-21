@@ -103,6 +103,11 @@ const configs = [
     name: 'ACA',
     googleSheetId: '1ukZ53qRUZLOy7sXBzMHpHkZOecuo97ewX8P0pXpk95g',
     siteUUID: '0BF67B1D-444F-45F5-BA5B-E3ADD7E4C30B'
+  },
+  {
+    name: 'DA',
+    googleSheetId: '18gkS_5ghZGW0smYwV0OHYZL4yph-r02wIcVXujEF8HQ',
+    siteUUID: 'A93E4DF2-F779-4F15-B25B-826D8A3B8009-DA'
   }
 ]
 

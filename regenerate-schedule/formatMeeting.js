@@ -153,7 +153,7 @@ function getNextOccurance({dayOfWeekEST, startTimeEST}) {
 }
 
 
-const COLUMN_JSON_KEYS = ["dayOfWeekEST", "startTimeEST", "startTimePST", "startTimeUK", "startTimeIndia", "meetingName", "zoomMeetingId", "zoomMeetingPassword", "zoomJoinUrl", "contactInfo", "notes"]; 
+const COLUMN_JSON_KEYS = ["dayOfWeekEST", "startTimeEST", "meetingName", "zoomMeetingId", "zoomMeetingPassword", "zoomJoinUrl", "contactInfo", "notes"]; 
 const rowToJson = cells => Object.fromEntries(cells.map((content, i) => [COLUMN_JSON_KEYS[i], content]))
 
 const LUXON_DAYS_OF_WEEK = {
