@@ -13,6 +13,7 @@ const DEBUG_FILE_NAME = 'schedule.json'
 
 async function rebuildAndDeploySite({ name, googleSheetId, siteUUID }) {
 	console.log(`\nRebuilding site "${name}" ${siteUUID}`)
+  
 	const jsonSchedule = await generateSchedule( googleSheetId ); 
   console.log("Generated schedule")
 

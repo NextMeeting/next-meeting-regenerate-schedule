@@ -12,7 +12,7 @@ const { validateEnvVars, parseBoolean, asyncForEach, asyncMap, sendSlackNotifica
 
 const ROWS_OCCUPIED_BY_HEADER = 2;
 const ROWS_TO_IGNORE_FROM_END = 2;
-const COLUNM_COUNT = 11;
+const COLUNM_COUNT = 8;
 
 const VALID_ZOOM_ID_REGEX=/[0-9]{3}/ig
 const VALID_ZOOM_PASSWORD_REGEX=/[a-z0-9]/ig
@@ -33,12 +33,20 @@ const EMAIL_LINK_REGEX = /mailto:/gim
 
 const retrieveFormattedMeetingFromSheet = sheet => i => {
 	if(i <= ROWS_OCCUPIED_BY_HEADER) return;
+	
+	// SA-only override
+	const isSAMeetingList = sheet._spreadsheet.spreadsheetId === "1_QxT6VIm1HTLKSl71DtDqSMWVZYrdbqSl0WSF0Ch6g4"
+	const timezone = isSAMeetingList ? "UTC" : "America/New_York";
+	
+	console.log(`ℹ️ Formatting meeting info`);
+	console.log(`⏰ Assuming source timezone: ${timezone}`);	
+	
 	return pipe(
 		// data => {console.log(data); return data},
 		getRowContent(sheet),
 		rowToJson,
-		// data => {console.log(data); return data},
-		formatMeetingInfo
+		data => {console.log(data); return data},
+		formatMeetingInfo(timezone)
 	)(i)
 }
 
@@ -55,7 +63,7 @@ function determinePlatform({ meetingId, meetingPassword, joinUrl }) {
   return 'unknown';
 }
 
-const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol, notes = ''}) => {
+const formatMeetingInfo = timezone => ({dayOfWeekEST, startTimeEST, meetingName, zoomMeetingId, zoomMeetingPassword, zoomJoinUrl, contactInfo, unknownCol, notes = ''}) => {
 	try {
 		// console.log(`Formatting ${dayOfWeekEST} ${startTimeEST} ${meetingName}`);
 		if(startTimeEST === undefined) {
@@ -95,7 +103,7 @@ const formatMeetingInfo = ({dayOfWeekEST, startTimeEST, meetingName, zoomMeeting
 		//console.log(meetingName)
 		return {
 			name: meetingName || "<Untitled Meeting>",
-			nextOccurrence: getNextOccurance({dayOfWeekEST, startTimeEST}),
+			nextOccurrence: getNextOccurance({ dayOfWeekEST, startTimeEST, timezone }),
 			connectionDetails: {
 				platform,
 				mustContactForConnectionInfo: !zoomJoinUrl,
@@ -132,14 +140,18 @@ const ALLOW_ALREADY_STARTED_MEETINGS_THRESHOLD = {
 	minutes: 30
 }
 
-function getNextOccurance({dayOfWeekEST, startTimeEST}) {
-	const { hour, minute } = parseHourAndMinute(startTimeEST);
-	const luxonDate = DateTime.fromObject({
-		zone: "America/New_York",
+function getNextOccurance({dayOfWeekEST, startTimeEST, timezone = "America/New_York"}) {
+	const { hour, minute } = parseHourAndMinute(startTimeEST.toUpperCase()); // Uppercase is required for proper AM/PM parsing
+	
+	const luxonInput = {
+		zone: timezone,
 		weekday: dayOfWeekStringToLuxonWeekdayNumber(dayOfWeekEST),
 		hour,
 		minute
-	}).toUTC();
+	}
+
+	const luxonDate = DateTime.fromObject(luxonInput).toUTC();
+	
 	const luxonDateAsISO = luxonDate.toISO();
 	if(luxonDateAsISO === null) console.error(`❗️ null date! Info: ${dayOfWeekEST} ${startTimeEST}`);
 
@@ -153,7 +165,7 @@ function getNextOccurance({dayOfWeekEST, startTimeEST}) {
 }
 
 
-const COLUMN_JSON_KEYS = ["dayOfWeekEST", "startTimeEST", "meetingName", "zoomMeetingId", "zoomMeetingPassword", "zoomJoinUrl", "contactInfo", "notes"]; 
+const COLUMN_JSON_KEYS = ["dayOfWeekEST", "startTimeEST", "meetingName", "zoomMeetingId", "zoomMeetingPassword", "zoomJoinUrl", "contactInfo", "notes", "meetingLengthMinutes"]; 
 const rowToJson = cells => Object.fromEntries(cells.map((content, i) => [COLUMN_JSON_KEYS[i], content]))
 
 const LUXON_DAYS_OF_WEEK = {
@@ -177,7 +189,7 @@ const dayOfWeekStringToLuxonWeekdayNumber = str => {
 // From https://gist.github.com/apolopena/ad4af8bb58e2b1f18b1e0bb78143ebdc
 function convert12HourTimeTo24HourTime(s) {
 	if(s.split(":")[0].length == 1) s = "0" + s; // Pad single-digit hours to simplify the slicing code
-	const ampm = s.slice(-2);
+	const ampm = s.slice(-2).toUpperCase(); // So "am" and "AM" both match
 	const hours = Number(s.slice(0, 2));
 	let time = s.slice(0, -2);
 	if (ampm === 'AM') {
@@ -205,7 +217,16 @@ const parseHourAndMinute = str => {
 }
 
 
-const getRowContent = sheet => rowNumber => map(COLUNM_COUNT, i => sheet.getCell(rowNumber, i)._rawData.formattedValue);
+const getRowContent = sheet => rowNumber => map(COLUNM_COUNT, i => {
+	// console.log(`row: ${rowNumber}, column count: ${COLUNM_COUNT}, i: ${i}`)
+	let data;
+	try {
+		data = sheet.getCell(rowNumber, i)._rawData.formattedValue	
+	} catch(e) {
+		console.error(e);
+	}
+	return data;
+});
 
 const containsNumbers = str => MATCHES_DIGITS_REGEX.test(str);
 

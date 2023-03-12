@@ -1,0 +1,8 @@
+{
+  "actions" : {
+    "run" : {
+      "enabled" : true,
+      "script" : " cd regenerate-schedule && node app.js"
+    }
+  }
+}

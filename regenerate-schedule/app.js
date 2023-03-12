@@ -101,13 +101,18 @@ const configs = [
   },
   {
     name: 'ACA',
-    googleSheetId: '1ukZ53qRUZLOy7sXBzMHpHkZOecuo97ewX8P0pXpk95g',
+    googleSheetId: '1EyR9SJSbEn0rIKtb10hYTQQCBHdJ42pBKFE6ezQeY8A',
     siteUUID: '0BF67B1D-444F-45F5-BA5B-E3ADD7E4C30B'
   },
   {
     name: 'DA',
     googleSheetId: '18gkS_5ghZGW0smYwV0OHYZL4yph-r02wIcVXujEF8HQ',
     siteUUID: 'A93E4DF2-F779-4F15-B25B-826D8A3B8009-DA'
+  },
+  {
+    name: 'AAA',
+    googleSheetId: '1RkJpxqJCHeQZjr0yYt6QMheujiynsCwY9M7G3BeV55E',
+    siteUUID: '5205ac4c-ec58-4f11-8c90-2be7fcd4d6f5-AAA'
   }
 ]
 
@@ -117,7 +122,7 @@ exports.handler = async (event, context) => {
   try {
       
      const errors = [];
-     await asyncParallelForEach(configs, async (config) => {
+     await asyncForEach(configs, async (config) => {
        try {
          await rebuildAndDeploySite(config)
        } catch(error) {
@@ -147,7 +152,7 @@ exports.handler = async (event, context) => {
     
     return { statusCode: 200, body: 'Success' }
   } catch (err) {
-    console.error(err);
+    console.error(`❗️ Error! ${err} ${JSON.stringify(err)}`);
     await Honeybadger.notifyAsync(error);
     await sendSlackNotification(`❗️ Error! ${err} ${JSON.stringify(err)}`);
     return { statusCode: 500, body: JSON.stringify(err) }
