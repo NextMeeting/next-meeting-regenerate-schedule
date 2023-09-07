@@ -9,7 +9,7 @@
   "dependencies": {
     "@honeybadger-io/js": "^4.0.3",
     "extract-email-address": "^1.4.0",
-    "google-spreadsheet": "^3.0.13",
+    "google-spreadsheet": "^3.3.0",
     "isomorphic-fetch": "^3.0.0",
     "luxon": "^1.25.0"
   },
