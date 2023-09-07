@@ -7,7 +7,7 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "@honeybadger-io/js": "^4.0.3",
+    "@honeybadger-io/js": "^4.9.3",
     "extract-email-address": "^1.4.0",
     "google-spreadsheet": "^3.0.13",
     "isomorphic-fetch": "^3.0.0",
