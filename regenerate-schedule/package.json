@@ -11,7 +11,7 @@
     "extract-email-address": "^1.4.0",
     "google-spreadsheet": "^3.0.13",
     "isomorphic-fetch": "^3.0.0",
-    "luxon": "^1.25.0"
+    "luxon": "^1.28.1"
   },
   "scripts": {
     "test": "mocha tests/unit/",
